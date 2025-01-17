@@ -1,0 +1,6 @@
+# Virtual environment
+.env
+.venv
+
+env/
+venv/
