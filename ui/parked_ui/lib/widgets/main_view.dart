@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import '../mqtt/mqtt_client.dart';
 import '../mqtt/mqtt_state.dart';
+import 'package:provider/provider.dart';
 
 class MainView extends StatefulWidget {
   final MQTTManager manager;
@@ -18,16 +18,6 @@ class MainView extends StatefulWidget {
 }
 
 class _MainViewState extends State<MainView> {
-  late final MQTTManager manager;
-  late final MQTTAppState appState;
-
-  @override
-  void initState() {
-    super.initState();
-    manager = widget.manager;
-    appState = widget.mqttAppState;
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -35,11 +25,17 @@ class _MainViewState extends State<MainView> {
       body: Column(
         children: [
           Expanded(
+            // Rebuilds when the state changes
             child: Consumer<MQTTAppState>(
               builder: (_, state, __) {
                 final messages = state.getHistoryText.split('\n').where((m) => m.isNotEmpty);
-                return ListView(
-                  children: messages.map((msg) => ListTile(title: Text(msg))).toList(),
+                return ListView.builder(
+                  itemCount: messages.length,
+                  itemBuilder: (context, index) {
+                    return ListTile(
+                      title: Text(messages.elementAt(index)),
+                    );
+                  },
                 );
               },
             ),
@@ -47,7 +43,7 @@ class _MainViewState extends State<MainView> {
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: ElevatedButton(
-              onPressed: manager.disconnect,
+              onPressed: widget.manager.disconnect,
               child: const Text('Disconnect'),
             ),
           ),
