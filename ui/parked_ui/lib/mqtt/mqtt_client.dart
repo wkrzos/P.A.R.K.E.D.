@@ -40,9 +40,8 @@ class MQTTManager {
       _currentState.setAppConnectionState(MQTTAppConnectionState.connecting);
       await _client.connect();
       return true;
-    } on Exception catch (e) {
+    } on Exception {
       _currentState.setAppConnectionState(MQTTAppConnectionState.disconnected);
-      print('Error: $e');
       return false;
     }
   }
@@ -73,6 +72,6 @@ class MQTTManager {
   }
 
   void onSubscribed(String topic) {
-    print('Subscribed to $topic');
+    
   }
 }
