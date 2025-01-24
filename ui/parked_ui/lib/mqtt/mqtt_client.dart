@@ -25,7 +25,6 @@ class MQTTManager {
     _client.secure = false;
     _client.logging(on: true);
 
-
     _client.onConnected = onConnected;
     _client.onDisconnected = onDisconnected;
     _client.onSubscribed = onSubscribed;
@@ -41,8 +40,9 @@ class MQTTManager {
       _currentState.setAppConnectionState(MQTTAppConnectionState.connecting);
       await _client.connect();
       return true;
-    } on Exception {
+    } on Exception catch (e) {
       _currentState.setAppConnectionState(MQTTAppConnectionState.disconnected);
+      print('Error: $e');
       return false;
     }
   }
@@ -57,37 +57,22 @@ class MQTTManager {
     _client.publishMessage(_topic, MqttQos.exactlyOnce, builder.payload!);
   }
 
-void onConnected() {
-  _currentState.setAppConnectionState(MQTTAppConnectionState.connected);
-
-
-
-  _client.updates!.listen((List<MqttReceivedMessage<MqttMessage?>>? messages) {
-    if (messages != null && messages.isNotEmpty) {
-      final MqttPublishMessage recMess =
-          messages[0].payload as MqttPublishMessage;
-      final String message =
+  void onConnected() {
+    _currentState.setAppConnectionState(MQTTAppConnectionState.connected);
+    _client.subscribe(_topic, MqttQos.atLeastOnce);
+    _client.updates!.listen((messages) {
+      final recMess = messages[0].payload as MqttPublishMessage;
+      final message =
           MqttPublishPayload.bytesToStringAsString(recMess.payload.message);
-
       _currentState.setReceivedText(message);
-    }
-  });
-}
+    });
+  }
 
-
-void onDisconnected() {
-  if (_client.connectionStatus!.returnCode ==
-      MqttConnectReturnCode.noneSpecified) {
-  } 
-  _currentState.setAppConnectionState(MQTTAppConnectionState.disconnected);
-
-  // Optionally reconnect
-  Future.delayed(const Duration(seconds: 3), () {
-    connect();
-  });
-}
-
+  void onDisconnected() {
+    _currentState.setAppConnectionState(MQTTAppConnectionState.disconnected);
+  }
 
   void onSubscribed(String topic) {
+    print('Subscribed to $topic');
   }
 }

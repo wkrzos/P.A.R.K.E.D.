@@ -22,8 +22,6 @@ class _LoginViewState extends State<LoginView> {
     super.dispose();
   }
 
-
-
 void _connect() async {
   final host = _hostTextController.text.trim();
   final topic = _topicTextController.text.trim();
@@ -37,22 +35,26 @@ void _connect() async {
   final appState = Provider.of<MQTTAppState>(context, listen: false);
   final manager = MQTTManager(host: host, topic: topic, state: appState);
 
-
   // Attempt to connect
   final connected = await manager.connect();
   if (connected) {
     // Navigate to MainView if connection is successful
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => MainView(manager: manager, mqttAppState: appState),
-      ),
-    );
+    pushAnotherScreen(manager: manager, appState: appState);
   } else {
     // Show an error dialog if connection fails
     _showErrorDialog('Failed to connect to the MQTT broker. Please try again.');
   }
 }
+
+void pushAnotherScreen({manager, appState}) {
+      Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => MainView(manager: manager, mqttAppState: appState),
+      ),
+    );
+}
+
 
   void _showErrorDialog(String message) {
     showDialog(
