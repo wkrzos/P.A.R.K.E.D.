@@ -4,6 +4,8 @@ import psycopg2
 from messenger import build_message
 from consts import DB_CONFIG, BROKER_IP, BROKER_PORT, SENDER_NAME
 
+# Added comment with GPT o3 since I was getting lost in the code, so it should help you too.
+
 def get_db_connection():
     """Establish and return a new PostgreSQL connection."""
     return psycopg2.connect(**DB_CONFIG)
@@ -12,7 +14,6 @@ def get_db_connection():
 
 def on_connect(client, userdata, flags, rc):
     print("Connected to MQTT broker, rc:", rc)
-    # The dbcontroller only listens on the /database topic.
     client.subscribe("/database")
 
 def on_message(client, userdata, msg):
@@ -21,7 +22,7 @@ def on_message(client, userdata, msg):
         header = message.get("header")
         body = message.get("body", {})
         sender = message.get("sender")
-        # Ignore our own messages.
+
         if sender == SENDER_NAME:
             return
 
@@ -37,7 +38,7 @@ def on_message(client, userdata, msg):
     except Exception as e:
         print("Error processing message:", e)
 
-# --- Database Handlers for Entry and Departure ---
+# --- Database Handlers ---
 
 def handle_entry(client, body):
     """
@@ -154,12 +155,12 @@ def handle_departure(client, body):
     db_status_message = build_message("database_status", message_body)
     client.publish("/database", db_status_message)
 
-# --- Helper Functions ---
+# --- Helpers ---
 
 def get_gate_id(gate_code):
     """
     Returns the database ID for a given gate code.
-    In this example, we use a simple hard-coded mapping.
+    Hard coded for now.
     """
     gate_mapping = {
         "entry_gate": 1,
@@ -167,7 +168,7 @@ def get_gate_id(gate_code):
     }
     return gate_mapping.get(gate_code, 0)
 
-# --- Main Application Loop ---
+# --- Main ---
 
 def main():
     mqtt_client = mqtt.Client()
