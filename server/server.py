@@ -100,6 +100,8 @@ if __name__ == '__main__':
     connect()
     client.on_message = process_message
 
+    client.loop_forever()
+
     #while(True):
     #    message = input("message: ")
-     #   call(message)
+        #   call(message)
