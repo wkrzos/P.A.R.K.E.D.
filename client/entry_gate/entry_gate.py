@@ -28,6 +28,8 @@ def process_message(client, userdata, message):
         if response_dict['sender'] == consts.SENDER_NAME:
             return
 
+        print(response_dict)
+
         response_controller(recieved_dict=response_dict)
     except:
         print("Couldn't process message")
@@ -43,14 +45,19 @@ def response_controller(recieved_dict: dict):
         register_confirmation(body)
 
 
-def register_entry(recieved_dict):
+def register_entry():
     database_message = {
-            "card_uuid" : "ABC123",
+            "card_uuid" : "CARD789",
     }
 
     waiting_for_confirmation = True
 
+    print("registering entry")
+
     database_message_string = messenger.build_message("entry", database_message)
+
+    print(database_message_string)
+
     client.publish(consts.TOPIC, database_message_string)
 
 def register_confirmation(recieved_dict):
@@ -78,4 +85,4 @@ if __name__ == '__main__':
 
     while(True):
         message = input("message: ")
-        register_entry
+        register_entry()

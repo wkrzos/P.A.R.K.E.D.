@@ -1,5 +1,5 @@
-BROKER_IP = "10.0.2.15"
+BROKER_IP = "localhost"
 BROKER_PORT = 1883
-SENDER_NAME = "entry_gate"
+SENDER_NAME = "ENTRY_GATE_1"
 
 TOPIC = "/entries"
