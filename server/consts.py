@@ -9,3 +9,6 @@ TOPICS = {
     "db" : "/database",
     "register" : "/register"
 }
+
+
+MAX_PARKING_SPACES = 50

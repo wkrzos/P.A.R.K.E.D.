@@ -9,6 +9,8 @@ broker_port = consts.BROKER_PORT
 
 client = mqtt.Client()
 
+occupied_spaces = 0
+
 def connect():
     client.connect(broker, broker_port, 60)
 
@@ -28,6 +30,34 @@ def process_message(client, userdata, message):
     except Exception as e:
         print("Couldn't process message:", e)
 
+
+def update_parking_count(action):
+    """
+    Updates the occupied parking space count based on entry or departure action.
+    Sends the updated count to all gates.
+    """
+    global occupied_spaces
+
+    if action == "entry":
+        if occupied_spaces < consts.MAX_PARKING_SPACES:
+            occupied_spaces += 1
+    elif action == "departure":
+        if occupied_spaces > 0:
+            occupied_spaces -= 1
+
+    parking_status_message = messenger.build_message('database_occupied', {
+        "occupied_number": occupied_spaces,
+        "max_spaces": consts.MAX_PARKING_SPACES
+    })
+
+    # Notify all gates
+    client.publish(consts.TOPICS['entry'], parking_status_message)
+    client.publish(consts.TOPICS['departure'], parking_status_message)
+    print(f"Updated parking spaces: {occupied_spaces}/{consts.MAX_PARKING_SPACES}")
+
+
+
+
 def response_controller(recieved_dict: dict):    
     header = recieved_dict.get('header')
     body = recieved_dict.get('body', {})
@@ -38,6 +68,11 @@ def response_controller(recieved_dict: dict):
         register_departure(body)
     elif header == 'database_status':
         gate_confirmation(body)
+
+        if body.get('status') is True:
+            update_parking_count(body.get('action'))
+            inform_ui(body)
+
     elif header == 'register_card':
         handle_registration(body)
     elif header == 'registration_response':
@@ -72,10 +107,14 @@ def gate_confirmation(recieved_dict):
 
 # UI MESSAGING
 def inform_ui(recieved_dict):
+    global occupied_spaces
+
     message_dict = {
         "action": recieved_dict.get('action'),
         "user": recieved_dict.get('user'),
         "card_uuid": recieved_dict.get('card_uuid'),
+        "max_spaces" : consts.MAX_PARKING_SPACES,
+        "occupied_spaces" : occupied_spaces,
         "timestamp": time.asctime(time.localtime())
     }
     ui_message_string = messenger.build_message('parking_update', message_dict)
