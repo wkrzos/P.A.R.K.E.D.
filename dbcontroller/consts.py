@@ -1,6 +1,7 @@
 BROKER_IP = "localhost"
 BROKER_PORT = 1883
 SENDER_NAME = "dbcontroller"
+TOPIC = "/database"
 
 DB_CONFIG = {
     "host": "localhost",
@@ -8,4 +9,10 @@ DB_CONFIG = {
     "database": "parked",
     "user": "postgres",
     "password": "postgres"
+}
+
+REGISTER_RESPONSE_ACTIONS = {
+    "add": "add",
+    "edit": "edit",
+    "delete": "delete"
 }

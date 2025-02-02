@@ -1,14 +1,10 @@
 from asyncio import sleep, wait
 import time
 import paho.mqtt.client as mqtt
+
 import json
 import consts
 import messenger
-import board
-import neopixel
-import RPi.GPIO as GPIO
-from PIL import Image, ImageDraw, ImageFont
-import lib.oled.SSD1331 as SSD1331
 
 
 broker = consts.BROKER_IP
@@ -17,10 +13,6 @@ broker_port = consts.BROKER_PORT
 client = mqtt.Client()
 
 waiting_for_confirmation = False
-
-# Initialize WS2812 LED strip
-NUM_PIXELS = 8
-pixels = neopixel.NeoPixel(board.D18, NUM_PIXELS, brightness=1.0/32, auto_write=False)
 
 def connect():
     client.connect(broker, broker_port, 60)
@@ -44,13 +36,11 @@ def process_message(client, userdata, message):
 
 
 def response_controller(recieved_dict: dict):
-    global waiting_for_confirmation
-
     header = recieved_dict['header']
     body = recieved_dict['body']
 
-    if header == 'entry':
-        register_entry(body)
+    if header == 'departure':
+        register_departure(body)
     if header == 'confirmed':
         if waiting_for_confirmation:
             register_confirmation(body)
@@ -58,8 +48,9 @@ def response_controller(recieved_dict: dict):
         update_parking_status(body)
 
 
-def register_entry():
+def register_departure():
     global waiting_for_confirmation
+    
     database_message = {
             "card_uuid" : "CARD789",
     }
@@ -146,4 +137,4 @@ if __name__ == '__main__':
 
     while(True):
         message = input("message: ")
-        register_entry()
+        register_departure()

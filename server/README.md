@@ -46,6 +46,45 @@
 
     }
 
+## ui (/ui)
+
+### "registration_prompt
+
+    {
+    "header": "registration_prompt",
+    "sender": "parking_server",
+    "body": {
+        "card_uuid": "ABC123XYZ"
+        }
+    }
+
+
+## "register_panel" (/register)
+### "register_card"
+
+    {
+    "header": "register_card",
+    "sender": "register_panel",
+    "body": {
+        "card_uuid": "ABC123XYZ"
+        }
+    }
+
+
+
+## "ui" (/ui)
+### "registration_response"
+
+    {
+    "header": "registration_response",
+    "sender": "ui",
+    "body": {
+        "card_uuid": "UUID_HERE",
+        "username": "Name Surname",
+        "action": "add" / "edit" / "delete"
+        }
+    }
+
 
 # Conventional messages (sent)
 

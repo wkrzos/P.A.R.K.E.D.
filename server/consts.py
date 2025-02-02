@@ -6,5 +6,9 @@ TOPICS = {
     "ui" : "/ui",
     "entry" : "/entries",
     "departure" : "/departures",
-    "db" : "/database"
+    "db" : "/database",
+    "register" : "/register"
 }
+
+
+MAX_PARKING_SPACES = 50
