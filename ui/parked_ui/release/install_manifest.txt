@@ -1,0 +1,12 @@
+/home/gate/Desktop/parked/P.A.R.K.E.D./ui/parked_ui/build/linux/x64/release/bundle/parked_ui
+/home/gate/Desktop/parked/P.A.R.K.E.D./ui/parked_ui/build/linux/x64/release/bundle/data/icudtl.dat
+/home/gate/Desktop/parked/P.A.R.K.E.D./ui/parked_ui/build/linux/x64/release/bundle/lib/libflutter_linux_gtk.so
+/home/gate/Desktop/parked/P.A.R.K.E.D./ui/parked_ui/build/linux/x64/release/bundle/data/flutter_assets/packages/cupertino_icons/assets/CupertinoIcons.ttf
+/home/gate/Desktop/parked/P.A.R.K.E.D./ui/parked_ui/build/linux/x64/release/bundle/data/flutter_assets/AssetManifest.bin
+/home/gate/Desktop/parked/P.A.R.K.E.D./ui/parked_ui/build/linux/x64/release/bundle/data/flutter_assets/AssetManifest.json
+/home/gate/Desktop/parked/P.A.R.K.E.D./ui/parked_ui/build/linux/x64/release/bundle/data/flutter_assets/shaders/ink_sparkle.frag
+/home/gate/Desktop/parked/P.A.R.K.E.D./ui/parked_ui/build/linux/x64/release/bundle/data/flutter_assets/fonts/MaterialIcons-Regular.otf
+/home/gate/Desktop/parked/P.A.R.K.E.D./ui/parked_ui/build/linux/x64/release/bundle/data/flutter_assets/version.json
+/home/gate/Desktop/parked/P.A.R.K.E.D./ui/parked_ui/build/linux/x64/release/bundle/data/flutter_assets/FontManifest.json
+/home/gate/Desktop/parked/P.A.R.K.E.D./ui/parked_ui/build/linux/x64/release/bundle/data/flutter_assets/NOTICES.Z
+/home/gate/Desktop/parked/P.A.R.K.E.D./ui/parked_ui/build/linux/x64/release/bundle/lib/libapp.so
