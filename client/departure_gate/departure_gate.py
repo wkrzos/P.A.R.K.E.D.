@@ -42,11 +42,15 @@ def response_controller(recieved_dict: dict):
     if header == 'departure':
         register_departure(body)
     if header == 'confirmed':
-        register_confirmation(body)
+        if waiting_for_confirmation:
+            register_confirmation(body)
+    if header == 'database_occupied':
+        update_parking_status(body)
 
 
 def register_departure():
     global waiting_for_confirmation
+    
     database_message = {
             "card_uuid" : "CARD789",
     }
@@ -66,18 +70,63 @@ def register_confirmation(recieved_dict):
     waiting_for_confirmation = False
     if recieved_dict['status']:
         print('yippieee')
-        light_green_led
+        light_green_led()
     else:
         print('womp womp')
-        light_red_led
+        light_red_led()
 
 
 def light_red_led():
-    pass
+    pixels.fill((255, 0, 0))
+    pixels.show()
+
+    time.sleep(3)
+
+    pixels.fill((0,0,0))
+    pixels.show()
 
 
 def light_green_led():
-    pass
+    pixels.fill((0, 255, 0))
+    pixels.show()
+
+    time.sleep(3)
+
+    pixels.fill((0,0,0))
+    pixels.show()
+
+def update_parking_status(received_dict):
+    occupied_spaces = received_dict.get('occupied_number', 0)
+    max_spaces = received_dict.get('max_spaces', consts.MAX_PARKING_SPACES)
+    empty_spaces = max_spaces - occupied_spaces
+
+    print(f"Parking Status: {occupied_spaces}/{max_spaces} occupied, {empty_spaces} empty")
+
+    disp = SSD1331.SSD1331()
+    disp.Init()
+    disp.clear()
+
+    image = Image.new("RGB", (disp.width, disp.height), "BLACK")
+    draw = ImageDraw.Draw(image)
+
+    try:
+        font = ImageFont.truetype("./lib/oled/Font.ttf", 16)
+    except Exception as e:
+        print("Could not load custom font, using default.", e)
+        font = ImageFont.load_default()
+
+    draw.rectangle((0, 0, disp.width, disp.height), fill="BLACK")
+
+    status_text = f"Empty: {empty_spaces}"
+    
+    text_width, text_height = draw.textsize(status_text, font=font)
+    x = (disp.width - text_width) // 2
+    y = (disp.height - text_height) // 2
+
+    draw.text((x, y), status_text, font=font, fill="WHITE")
+
+    disp.ShowImage(image, 0, 0)
+
 
 if __name__ == '__main__':
 
