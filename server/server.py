@@ -1,4 +1,3 @@
-from asyncio import sleep, wait
 import time
 import paho.mqtt.client as mqtt
 import json
@@ -12,7 +11,7 @@ client = mqtt.Client()
 
 def connect():
     client.connect(broker, broker_port, 60)
-    
+
     for topic in consts.TOPICS.values():
         print("Subscribing to:", topic)
         client.subscribe(topic)
@@ -33,17 +32,16 @@ def response_controller(recieved_dict: dict):
     header = recieved_dict.get('header')
     body = recieved_dict.get('body', {})
 
-    print("Header:", header)
-    print("Body:", body)
-
     if header == 'entry':
         register_entry(body)
     elif header == 'departure':
         register_departure(body)
     elif header == 'database_status':
         gate_confirmation(body)
-        if body.get('status') == True:
-            inform_ui(body)
+    elif header == 'register_card':
+        handle_registration(body)
+    elif header == 'registration_response':
+        handle_registration_response(body)
 
 # DATABASE MESSAGING
 def register_entry(recieved_dict):
@@ -68,15 +66,45 @@ def gate_confirmation(recieved_dict):
     gate_message_string = messenger.build_message('confirmed', {"status": recieved_dict.get('status')})
     client.publish(consts.TOPICS.get(recieved_dict.get('action')), gate_message_string)
 
+    # Send message to UI after positive confirmation
+    if recieved_dict.get('status') == True:
+        inform_ui(recieved_dict)
+
 # UI MESSAGING
 def inform_ui(recieved_dict):
     message_dict = {
         "action": recieved_dict.get('action'),
         "user": recieved_dict.get('user'),
-        "card_uuid": recieved_dict.get('card_uuid')
+        "card_uuid": recieved_dict.get('card_uuid'),
+        "timestamp": time.asctime(time.localtime())
     }
     ui_message_string = messenger.build_message('parking_update', message_dict)
     client.publish(consts.TOPICS['ui'], ui_message_string)
+
+# REGISTRATION MESSAGING
+def handle_registration(body):
+    card_uuid = body.get('card_uuid')
+    if card_uuid:
+        message_dict = {
+            "card_uuid": card_uuid
+        }
+        ui_message = messenger.build_message('registration_prompt', message_dict)
+        client.publish(consts.TOPICS['ui'], ui_message)
+        print(f"Sent registration prompt to UI for card UUID: {card_uuid}")
+
+def handle_registration_response(body):
+    card_uuid = body.get('card_uuid')
+    username = body.get('username')
+    action = body.get('action')  # add, edit, delete
+
+    if card_uuid and username and action:
+        server_message = messenger.build_message('registration_update', {
+            "card_uuid": card_uuid,
+            "username": username,
+            "action": action
+        })
+        client.publish(consts.TOPICS['register'], server_message)
+        print(f"Processed registration response: {action} user {username} for card {card_uuid}")
 
 if __name__ == '__main__':
     print("Starting server...")
