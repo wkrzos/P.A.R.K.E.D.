@@ -46,6 +46,7 @@ def response_controller(recieved_dict: dict):
 
 
 def register_entry():
+    global waiting_for_confirmation
     database_message = {
             "card_uuid" : "CARD789",
     }
@@ -61,12 +62,14 @@ def register_entry():
     client.publish(consts.TOPIC, database_message_string)
 
 def register_confirmation(recieved_dict):
+    global waiting_for_confirmation
+    waiting_for_confirmation = False
     if recieved_dict['status']:
         print('yippieee')
-        light_green_led
+        light_green_led()
     else:
         print('womp womp')
-        light_red_led
+        light_red_led()
 
 
 def light_red_led():

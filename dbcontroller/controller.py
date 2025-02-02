@@ -2,10 +2,9 @@ import json
 import paho.mqtt.client as mqtt
 import psycopg2
 from messenger import build_message
-from consts import DB_CONFIG, BROKER_IP, BROKER_PORT, SENDER_NAME
+from consts import DB_CONFIG, BROKER_IP, BROKER_PORT, SENDER_NAME, REGISTER_RESPONSE_ACTIONS
 
-# Added comment with GPT o3 since I was getting lost in the code, so it should help you too.
-
+# --- Database Connection ---
 def get_db_connection():
     """Establish and return a new PostgreSQL connection."""
     return psycopg2.connect(**DB_CONFIG)
@@ -23,6 +22,7 @@ def on_message(client, userdata, msg):
         body = message.get("body", {})
         sender = message.get("sender")
 
+        # Ignore messages sent by ourselves.
         if sender == SENDER_NAME:
             return
 
@@ -31,6 +31,8 @@ def on_message(client, userdata, msg):
                 handle_entry(client, body)
             elif header == "departure":
                 handle_departure(client, body)
+            elif header == "registration_response":
+                handle_registration_response(client, body)
             else:
                 print("Unknown header on /database:", header)
         else:
@@ -154,6 +156,122 @@ def handle_departure(client, body):
     }
     db_status_message = build_message("database_status", message_body)
     client.publish("/database", db_status_message)
+
+def handle_registration_response(client, body):
+    """
+    Processes a "registration_response" message coming from the UI.
+    The expected message body:
+      {
+          "card_uuid": <card_uuid>,
+          "username": <username>,
+          "action": "add" / "edit" / "delete"
+      }
+    Depending on the action, this handler will:
+      - "add": Create a new user (with default password and email) and a new card.
+      - "edit": Update the owner of an existing card to the user with the provided username.
+      - "delete": Delete the card and its associated user.
+    """
+    card_uuid = body.get("card_uuid")
+    if not card_uuid:
+        print("Registration message missing card_uuid")
+        return
+
+    username = body.get("username")
+    if not username:
+        print("Registration message missing username")
+        return
+
+    action = body.get("action")
+    if action not in REGISTER_RESPONSE_ACTIONS:
+        print("Invalid action:", action)
+        return
+
+    conn = None
+    status = False
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+
+        if action == "add":
+            # Create a new user with default password and email.
+            # NOTE: Adjust the default values as needed.
+            default_password = "defaultpassword"
+            default_email = f"{username.replace(' ', '').lower()}@example.com"
+            cur.execute(
+                "INSERT INTO parking_user (username, password, email) VALUES (%s, %s, %s) RETURNING id",
+                (username, default_password, default_email)
+            )
+            user_id = cur.fetchone()[0]
+            # Create a new card for the user.
+            cur.execute(
+                "INSERT INTO card (card_code, user_id) VALUES (%s, %s)",
+                (card_uuid, user_id)
+            )
+            print(f"Registration added: Created user (ID: {user_id}) and card for {card_uuid}")
+
+        elif action == "edit":
+            # Find the user with the provided username.
+            cur.execute(
+                "SELECT id FROM parking_user WHERE username = %s",
+                (username,)
+            )
+            user_row = cur.fetchone()
+            if not user_row:
+                print(f"No user found with username: {username}")
+            else:
+                user_id = user_row[0]
+                # Update the card to belong to this user.
+                cur.execute(
+                    "UPDATE card SET user_id = %s WHERE card_code = %s",
+                    (user_id, card_uuid)
+                )
+                if cur.rowcount == 0:
+                    print(f"No card found with card_uuid: {card_uuid} to update")
+                else:
+                    print(f"Registration edited: Card {card_uuid} reassigned to user {username}")
+
+        elif action == "delete":
+            # Find the card to determine the user.
+            cur.execute(
+                "SELECT user_id FROM card WHERE card_code = %s",
+                (card_uuid,)
+            )
+            card_row = cur.fetchone()
+            if not card_row:
+                print(f"No card found with card_uuid: {card_uuid} to delete")
+            else:
+                user_id = card_row[0]
+                # Delete the card first.
+                cur.execute(
+                    "DELETE FROM card WHERE card_code = %s",
+                    (card_uuid,)
+                )
+                # Then delete the user.
+                cur.execute(
+                    "DELETE FROM parking_user WHERE id = %s",
+                    (user_id,)
+                )
+                print(f"Registration deleted: User (ID: {user_id}) and card {card_uuid} removed")
+
+        conn.commit()
+        status = True
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        print("Error in handle_registration_response:", e)
+    finally:
+        if conn:
+            conn.close()
+
+    # Build and publish a response message.
+    message_body = {
+        "action": action,
+        "status": status,
+        "card_uuid": card_uuid,
+        "user": username
+    }
+    response_message = build_message("registration_response", message_body)
+    client.publish("/database", response_message)
 
 # --- Helpers ---
 

@@ -103,7 +103,7 @@ def handle_registration_response(body):
             "username": username,
             "action": action
         })
-        client.publish(consts.TOPICS['register'], server_message)
+        client.publish(consts.TOPICS['db'], server_message)
         print(f"Processed registration response: {action} user {username} for card {card_uuid}")
 
 if __name__ == '__main__':
